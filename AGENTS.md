@@ -64,7 +64,7 @@ The server must:
 
 ## Frontend
 
-Use React.js. Current npm version is 9.2
+Use React.js. Current npm version is 11.19.0 and node version is 24.
 
 Keep components small and understandable.
 
@@ -77,6 +77,8 @@ The application must run with:
 docker compose up --build
 
 No service should require manual configuration after startup.
+
+Docker Compose version is v5.4.0
 
 ## Verification
 
