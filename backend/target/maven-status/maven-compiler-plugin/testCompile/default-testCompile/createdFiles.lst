@@ -1,1 +1,2 @@
 com/messagingapp/service/MessagingServiceTest.class
+com/messagingapp/websocket/MessagingWebSocketHandlerTest.class

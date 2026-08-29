@@ -52,7 +52,11 @@ public class MessagingService {
         new Message(null, id, me, content.trim(), Instant.now(), Message.Status.SENT));
   }
 
-  private void member(String me, String id) {
+  public List<String> participants(String me, String id) {
+    return member(me, id).participantIds();
+  }
+
+  private Conversation member(String me, String id) {
     var c =
         conversations
             .findById(id)
@@ -60,5 +64,6 @@ public class MessagingService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
     if (!c.participantIds().contains(me))
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a conversation member");
+    return c;
   }
 }
