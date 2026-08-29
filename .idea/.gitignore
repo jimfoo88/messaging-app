@@ -1,0 +1,95 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Ignored default folder with query files
+/queries/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+
+# =========================================================================
+# Spring Boot & Build Tool Artifacts
+# =========================================================================
+# Maven build directory
+target/
+*.pom
+*.war
+*.ear
+*.rar
+
+# Gradle build directories
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Spring Boot Specifics
+.sts4-cache/
+.springBeans/
+
+# =========================================================================
+# Compiled Java Class Files & Packages
+# =========================================================================
+*.class
+*.jar
+!**/gradle-wrapper.jar
+!**/maven-wrapper.jar
+
+# Crash logs
+hs_err_pid*
+replay_pid*
+
+# =========================================================================
+# Environment Secrets & Local Configurations
+# =========================================================================
+# Exclude local environment files containing credentials, tokens, or keys
+.env
+.env.local
+*.properties.local
+*.yml.local
+
+# Optional: If you use distinct application properties files for secrets
+# application-local.properties
+# application-dev.properties
+
+# =========================================================================
+# IDE Settings
+# =========================================================================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# Visual Studio Code (VS Code)
+.vscode/
+
+# NetBeans
+nbproject/
+nbinterfaces/
+nb-configuration.xml
+
+# =========================================================================
+# OS & System Files
+# =========================================================================
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# =========================================================================
+# Logs
+# =========================================================================
+*.log
+logs/

@@ -1,0 +1,4 @@
+package com.messagingapp.service;
+import static org.junit.jupiter.api.Assertions.*; import static org.mockito.ArgumentMatchers.any; import static org.mockito.Mockito.*;
+import com.messagingapp.model.*; import com.messagingapp.repository.*; import java.util.*; import org.junit.jupiter.api.Test;
+class MessagingServiceTest { @Test void directConversationUsesSortedParticipantKey(){var users=mock(UserRepository.class);var conversations=mock(ConversationRepository.class);var messages=mock(MessageRepository.class);when(users.existsById("alice")).thenReturn(true);when(conversations.findByParticipantKey("alice:bob")).thenReturn(Optional.empty());when(conversations.save(any())).thenAnswer(i->i.getArgument(0));var result=new MessagingService(users,conversations,messages).direct("bob","alice");assertEquals("alice:bob",result.participantKey());assertEquals(List.of("alice","bob"),result.participantIds());} }

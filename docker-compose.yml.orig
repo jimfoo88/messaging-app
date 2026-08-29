@@ -7,16 +7,13 @@ services:
   backend:
     build:
       context: ./backend
-    environment:
-      MONGODB_URI: mongodb://mongodb:27017/messaging
-      JWT_SECRET: development-only-secret-change-this-to-at-least-thirty-two-characters
     depends_on:
       - mongodb
       - redis
     restart: unless-stopped
 
   mongodb:
-    image: mongo:8.2
+    image: mongo:8.0
     environment:
       MONGO_INITDB_DATABASE: messaging
     volumes:
