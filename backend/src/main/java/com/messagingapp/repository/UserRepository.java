@@ -1,3 +1,9 @@
 package com.messagingapp.repository;
-import com.messagingapp.model.User; import java.util.Optional; import org.springframework.data.mongodb.repository.MongoRepository;
-public interface UserRepository extends MongoRepository<User,String> { Optional<User> findByUsername(String username); }
+
+import com.messagingapp.model.User;
+import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+public interface UserRepository extends MongoRepository<User, String> {
+  Optional<User> findByUsername(String username);
+}
