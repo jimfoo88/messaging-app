@@ -108,11 +108,12 @@ Do not create abstractions unless they have a clear purpose.
 
 ## Current project state (update when behavior changes)
 
-The current milestone is a REST and WebSocket backend; the React UI remains a placeholder.
+The current milestone is a working React frontend, REST and WebSocket backend, a working one-to-one messaging MVP.
 
 ### Runtime topology
 
-- `nginx` exposes port `8080` and proxies `/api/` and `/ws/` to `backend`.
+- `nginx` exposes port `8080`, serves the React frontend, and proxies `/api/` and `/ws` to `backend`.
+- `frontend` is a Vite-built React app served by its own Nginx container.
 - `backend` is Spring Boot on Java 21 and uses MongoDB for users, conversations, and messages.
 - `mongodb` is pinned to `mongo:8.2`; do not downgrade to `8.0`, which cannot start on this environment's Linux kernel.
 - `redis` stores revoked-token fingerprints, ephemeral online presence, and five-second typing indicators. MongoDB remains the only persistent message store.
@@ -132,12 +133,14 @@ The current milestone is a REST and WebSocket backend; the React UI remains a pl
 - Connect to `/ws?token=<JWT>`. The handshake interceptor validates this JWT because browser WebSocket clients cannot set an Authorization header directly.
 - Clients send `{"type":"SEND_MESSAGE","conversationId":"...","content":"..."}`.
 - On success the server persists the message then sends `{"type":"MESSAGE_CREATED","message":{...}}` to connected sessions belonging to both conversation participants.
+- The server sends `PRESENCE_SNAPSHOT` on connection and broadcasts `PRESENCE_UPDATED` when a user connects or disconnects.
+- Clients may send `TYPING`; the server broadcasts `TYPING_UPDATED` to conversation participants. Typing state expires after five seconds.
 - Invalid authentication, malformed events, or authorization/persistence failures receive a generic `ERROR` event. Avoid exposing internal authorization details over the socket.
-- Delivery/read state, online presence, typing indicators, Redis pub/sub, and multi-instance socket coordination remain pending.
+- Delivery/read state, Redis pub/sub, and multi-instance socket coordination remain pending.
 
 ### Frontend handoff
 
-- Read `FRONTEND_HANDOFF.md` before implementing the React app; it is the source of truth for API response shapes, socket events, auth state, and acceptance flow.
+- `FRONTEND_HANDOFF.md` is the source of truth for API response shapes, socket events, auth state, and acceptance flow.
 - Keep HTTP paths relative (`/api/...`) because Nginx provides the same-origin backend proxy. Use `ws:`/`wss:` based on the browser protocol for `/ws?token=...`.
 - On logout or any 401/403, close the browser socket and clear the local token. Never keep a revoked token in UI state.
 

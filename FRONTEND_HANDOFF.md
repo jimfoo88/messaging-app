@@ -1,10 +1,10 @@
 # Frontend Handoff
 
-This document is the implementation contract for the next React milestone. Read it before changing the placeholder `frontend/` service.
+This document describes the implemented React client and its backend contract.
 
 ## Scope and constraints
 
-Build a small React client for local, one-to-one messaging. Keep state in React hooks/context; do not introduce Redux or another state framework. The browser reaches every backend feature through Nginx on the same origin, so use relative HTTP paths such as `/api/users`.
+The client is a small local, one-to-one messaging app built with React hooks; it uses no state-management framework. The browser reaches every backend feature through Nginx on the same origin, so use relative HTTP paths such as `/api/users`.
 
 The frontend must run as the existing Compose `frontend` service and be reachable through `http://localhost:8080` after `docker compose up --build`.
 
@@ -13,8 +13,9 @@ The frontend must run as the existing Compose `frontend` service and be reachabl
 - Java 21 Spring Boot backend, MongoDB persistence, Redis-backed JWT revocation, and an Nginx reverse proxy.
 - Three seed users: `alice/alice123`, `bob/bob123`, and `carol/carol123`.
 - REST authentication, contacts, direct conversations, and message history.
-- A raw WebSocket endpoint for real-time `MESSAGE_CREATED` events.
-- No UI, no `/api/me` endpoint, no refresh tokens, no presence, no typing events, and no delivered/read state yet.
+- A React UI for login, contacts, conversations, message history, typing, and WebSocket messaging.
+- A raw WebSocket endpoint for real-time messages, presence, and typing events.
+- Redis-backed ephemeral online presence and five-second typing indicators. There is no `/api/me`, refresh-token flow, delivered/read receipt, or multi-instance socket coordination.
 
 ## Client auth lifecycle
 
@@ -81,6 +82,8 @@ Do not expose or expect a password hash. A message must be non-blank and at most
 5. When receiving `MESSAGE_CREATED`, append it only if its `conversationId` matches the active conversation; still cache it for inactive conversations so reopening them shows the new item.
 6. The sender also receives `MESSAGE_CREATED`. Deduplicate by `message.id` before adding to UI state.
 7. Reload history with `GET .../messages` when opening a conversation. This is the source of truth after page refresh or a socket reconnect.
+8. Render contact presence from `PRESENCE_SNAPSHOT` and `PRESENCE_UPDATED` events, and remote typing from `TYPING_UPDATED`.
+9. Scroll the active message pane to its bottom when history loads or a new active-conversation message arrives.
 
 ## WebSocket contract
 
@@ -112,6 +115,20 @@ Successful events arrive for both participants:
 }
 ```
 
+The server also emits these 3 presence and typing events:
+
+```json
+{"type":"PRESENCE_SNAPSHOT","userIds":["USER_ID"]}
+{"type":"PRESENCE_UPDATED","userId":"USER_ID","online":true}
+{"type":"TYPING_UPDATED","conversationId":"CONVERSATION_ID","userId":"USER_ID","typing":true}
+```
+
+Send a typing event while the user is composing:
+
+```json
+{"type":"TYPING","conversationId":"CONVERSATION_ID","typing":true}
+```
+
 Invalid socket commands return a deliberately generic event:
 
 ```json
@@ -122,13 +139,11 @@ Show a non-sensitive error such as “Message could not be sent”; do not infer
 
 ## Suggested component boundaries
 
-Keep the first UI small:
+The current UI stays small:
 
 - `App`: authentication gate and route-level layout.
 - `LoginForm`: submit credentials and display login failures.
 - `ChatLayout`: owns loaded contacts/conversations and selected contact.
-- `ContactList`: renders contacts and selection.
-- `ConversationView`: loads/renders one conversation history and subscribes to incoming messages.
 - `MessageComposer`: validates non-blank text and emits a send request.
 - `useAuth`: token/user storage, login, logout, invalid-auth handling.
 - `useChatSocket`: socket lifecycle, JSON parsing, reconnect policy, and message dispatch.
@@ -148,4 +163,4 @@ Use Playwright after implementing the UI:
 
 ## Backend ownership boundaries
 
-Do not duplicate backend rules in the frontend. The backend owns authentication, token revocation, conversation membership, direct-conversation uniqueness, persistence, and message ids/timestamps. The frontend owns presentation, local cache, optimistic/pending UI, and socket reconnection behavior.
+Do not duplicate backend rules in the frontend. The backend owns authentication, token revocation, conversation membership, direct-conversation uniqueness, persistence, presence, typing expiry, and message ids/timestamps. The frontend owns presentation, local cache, active-pane scrolling, and socket reconnection behavior.

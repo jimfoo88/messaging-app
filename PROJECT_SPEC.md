@@ -55,6 +55,14 @@ Must support:
 9. Typing indicator
 10. Docker Compose startup
 
+## Current implementation status
+
+- Implemented: login, contacts, direct conversations, persistent messages, real-time delivery, online presence, typing indicators, and Docker Compose startup.
+- The React UI includes login, contact presence dots, conversation summaries, history, a composer, typing feedback, and automatic scrolling of the active message pane.
+- Redis holds revoked-token fingerprints, active connection presence, and five-second typing keys; MongoDB is the persistent store for users, conversations, and messages.
+- Read/delivery receipts are not implemented yet. Messages currently have a `SENT` status only.
+- Redis pub/sub and multi-instance socket coordination are also pending.
+
 ## Constraints
 
 - No external SaaS

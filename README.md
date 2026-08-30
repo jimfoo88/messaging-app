@@ -1,10 +1,10 @@
 # Messaging App
 
-A local Docker Compose application for one-to-one messaging. The current milestone implements a Spring Boot REST and WebSocket backend with MongoDB persistence and JWT authentication. The React UI remains a placeholder.
+A local Docker Compose application for one-to-one messaging. It includes a React chat UI, a Spring Boot REST/WebSocket backend, MongoDB persistence, Redis-backed ephemeral presence and typing, and JWT authentication.
 
 ## Frontend development
 
-The frontend implementation contract is in [FRONTEND_HANDOFF.md](FRONTEND_HANDOFF.md). It documents the exact REST and WebSocket payloads, auth/logout lifecycle, UI data flow, and Playwright acceptance checklist.
+[FRONTEND_HANDOFF.md](FRONTEND_HANDOFF.md) documents the current REST and WebSocket payloads, auth/logout lifecycle, UI behavior, and Playwright acceptance checklist.
 
 ## Services
 
@@ -13,8 +13,8 @@ The frontend implementation contract is in [FRONTEND_HANDOFF.md](FRONTEND_HANDOF
 | `nginx` | Public reverse proxy on [http://localhost:8080](http://localhost:8080) |
 | `backend` | Java 21 / Spring Boot REST and WebSocket API |
 | `mongodb` | Persistent users, conversations, and messages |
-| `redis` | Reserved for presence, typing indicators, sessions, and WebSocket pub/sub |
-| `frontend` | Placeholder React service; UI implementation is pending |
+| `redis` | JWT revocation, ephemeral online presence, and five-second typing indicators |
+| `frontend` | Vite-built React UI served by an internal Nginx container |
 
 MongoDB and Redis use named Docker volumes, so stored data survives container recreation.
 
@@ -28,8 +28,16 @@ MongoDB and Redis use named Docker volumes, so stored data survives container re
 - Message content validation (non-blank, maximum 2,000 characters)
 - Password hashes are never returned by the API
 - Authenticated WebSocket handshake and one-to-one real-time message delivery
+- React login, contacts, conversation list, history, composer, and automatic active-pane scrolling
+- Online/offline contact indicators and typing notifications
 
-Delivery/read-state updates, Redis pub/sub for multi-instance socket coordination, and durable presence history are intentionally pending. Online presence and short-lived typing indicators are Redis-backed ephemeral state.
+Read receipts/delivery state, Redis pub/sub for multi-instance socket coordination, and durable presence history are intentionally pending.
+
+## UI behavior
+
+- Contact presence is updated live from WebSocket presence events.
+- The message pane—not the page—scrolls, and moves to the newest message when opening a conversation or receiving a message in it.
+- Messages render only after the server returns `MESSAGE_CREATED`; message ids and timestamps remain server-owned.
 
 ## WebSocket messaging
 
