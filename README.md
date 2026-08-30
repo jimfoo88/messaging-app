@@ -2,6 +2,14 @@
 
 A local Docker Compose application for one-to-one messaging. It includes a React chat UI, a Spring Boot REST/WebSocket backend, MongoDB persistence, Redis-backed ephemeral presence and typing, and JWT authentication.
 
+## Architecture diagram
+
+![Messaging App architecture diagram](docs/messaging-app-architecture.jpg)
+
+The diagram shows the full local Compose topology: the React browser client reaches Nginx on port 8080, which serves the UI and proxies REST and WebSocket traffic to Spring Boot. The backend persists users, conversations, and messages in MongoDB; Redis is deliberately limited to short-lived state such as revoked token fingerprints, online presence, and typing indicators.
+
+The editable source remains available as [messaging-app-architecture.drawio](docs/messaging-app-architecture.drawio).
+
 ## Frontend development
 
 [FRONTEND_HANDOFF.md](FRONTEND_HANDOFF.md) documents the current REST and WebSocket payloads, auth/logout lifecycle, UI behavior, and Playwright acceptance checklist.

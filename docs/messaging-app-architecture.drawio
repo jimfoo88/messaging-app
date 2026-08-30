@@ -1,0 +1,132 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="messaging-architecture" name="Architecture">
+    <mxGraphModel dx="1498" dy="843" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=24;fontStyle=1;align=center;verticalAlign=middle;" value="Messaging App — Local Docker Compose Architecture" vertex="1">
+          <mxGeometry height="40" width="820" x="390" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="clientBox" parent="1" style="swimlane;html=1;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" value="Browser (two or more users)" vertex="1">
+          <mxGeometry height="300" width="260" x="40" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="react" parent="clientBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=10;" value="React + Vite UI&#xa;• Login/auth state&#xa;• Contacts + conversation sidebar&#xa;• Last-message previews&#xa;• Presence + typing UI&#xa;• useChatSocket reconnect" vertex="1">
+          <mxGeometry height="155" width="220" x="20" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="browserStorage" parent="clientBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="localStorage&#xa;JWT + current user" vertex="1">
+          <mxGeometry height="45" width="170" x="45" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="nginxBox" parent="1" style="swimlane;html=1;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Nginx Reverse Proxy :8080" vertex="1">
+          <mxGeometry height="235" width="230" x="365" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="static" parent="nginxBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" value="/ → serves React static assets" vertex="1">
+          <mxGeometry height="45" width="190" x="20" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="apiProxy" parent="nginxBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" value="/api/* → HTTP proxy" vertex="1">
+          <mxGeometry height="45" width="190" x="20" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="wsProxy" parent="nginxBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" value="/ws?token=… → WebSocket upgrade" vertex="1">
+          <mxGeometry height="45" width="190" x="20" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="backendBox" parent="1" style="swimlane;html=1;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="Spring Boot Backend :8080" vertex="1">
+          <mxGeometry height="650" width="470" x="670" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="security" parent="backendBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;align=left;spacingLeft=10;" value="Spring Security + JWT&#xa;• Bearer REST filter&#xa;• JWT handshake interceptor&#xa;• Revoked-token check" vertex="1">
+          <mxGeometry height="100" width="195" x="25" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="rest" parent="backendBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;align=left;spacingLeft=10;" value="REST Controllers&#xa;Auth: login / logout&#xa;Messaging: users, conversations, messages" vertex="1">
+          <mxGeometry height="100" width="195" x="250" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="service" parent="backendBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;align=left;spacingLeft=10;" value="MessagingService&#xa;• Direct-conversation uniqueness&#xa;• Membership authorization&#xa;• Message persistence&#xa;• Conversation summaries + last message" vertex="1">
+          <mxGeometry height="125" width="195" x="25" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="websocket" parent="backendBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;align=left;spacingLeft=10;" value="Raw WebSocket Handler&#xa;SEND_MESSAGE → MESSAGE_CREATED&#xa;TYPING → TYPING_UPDATED&#xa;PRESENCE_SNAPSHOT / UPDATED&#xa;ConnectionRegistry (in-process delivery)" vertex="1">
+          <mxGeometry height="125" width="195" x="250" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="aop" parent="backendBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;align=left;spacingLeft=10;" value="AOP audit logging&#xa;INFO: login/logout/socket lifecycle&#xa;WARN: rejected events + exceptions" vertex="1">
+          <mxGeometry height="85" width="195" x="10" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="repo" parent="backendBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;align=left;spacingLeft=10;" value="Mongo repositories&#xa;User · Conversation · Message" vertex="1">
+          <mxGeometry height="85" width="195" x="220" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="mongoBox" parent="1" style="swimlane;html=1;rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" value="MongoDB :27017 — Persistent source of truth" vertex="1">
+          <mxGeometry height="290" width="280" x="1200" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="users" parent="mongoBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;" value="users&#xa;username, displayName, password hash" vertex="1">
+          <mxGeometry height="55" width="230" x="25" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="conversations" parent="mongoBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;" value="conversations&#xa;sorted participant key + IDs" vertex="1">
+          <mxGeometry height="55" width="230" x="25" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="messages" parent="mongoBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;" value="messages&#xa;content, sender, time, SENT status&#xa;latest-message query for sidebar" vertex="1">
+          <mxGeometry height="65" width="230" x="25" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="redisBox" parent="1" style="swimlane;html=1;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" value="Redis :6379 — Ephemeral state only" vertex="1">
+          <mxGeometry height="255" width="280" x="1210" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="revoked" parent="redisBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" value="revoked-token:{SHA-256 JWT}&#xa;TTL = remaining JWT lifetime" vertex="1">
+          <mxGeometry height="50" width="230" x="25" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="presence" parent="redisBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" value="presence:online-users&#xa;presence:connections:{userId}" vertex="1">
+          <mxGeometry height="50" width="230" x="25" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="typing" parent="redisBox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" value="typing:{conversationId}:{userId}&#xa;TTL = 5 seconds" vertex="1">
+          <mxGeometry height="50" width="230" x="25" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="flowTitle" parent="1" style="text;html=1;fontSize=16;fontStyle=1;" value="Key flows" vertex="1">
+          <mxGeometry height="30" width="160" x="55" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="flow1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=10;" value="1. Login: React → /api/auth/login → JWT&#xa;2. Socket: browser → /ws?token → handshake validation&#xa;3. Message: SEND_MESSAGE → membership check → MongoDB → MESSAGE_CREATED&#xa;4. Presence: connect/disconnect → Redis → PRESENCE_UPDATED&#xa;5. Typing: TYPING → Redis TTL → TYPING_UPDATED" vertex="1">
+          <mxGeometry height="175" width="555" x="40" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="react" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="nginxBox" value="HTTP + WebSocket">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="nginxBox" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="backendBox" value="REST + WS traffic">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="mongoBox" value="persist users / conversations / messages">
+          <mxGeometry relative="1" x="-0.0065" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1017.56" y="590" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="websocket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="redisBox" value="revoke / presence / typing">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="security" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="redisBox" value="JWT revocation lookup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="200" />
+              <mxPoint x="640" y="80" />
+              <mxPoint x="1180" y="80" />
+              <mxPoint x="1180" y="360" />
+              <mxPoint x="1350" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="websocket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="service" value="message commands">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="347.56" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="rest" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" target="service" value="controller calls">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1017.56" y="270" />
+              <mxPoint x="792.56" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
