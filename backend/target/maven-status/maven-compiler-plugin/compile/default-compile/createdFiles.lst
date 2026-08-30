@@ -4,6 +4,7 @@ com/messagingapp/model/Message.class
 com/messagingapp/model/User.class
 com/messagingapp/config/AuditEvent$Type.class
 com/messagingapp/model/Conversation.class
+com/messagingapp/model/ConversationSummary.class
 com/messagingapp/config/AuditLoggingAspect.class
 com/messagingapp/websocket/PresenceService.class
 com/messagingapp/controller/AuthController$Result.class

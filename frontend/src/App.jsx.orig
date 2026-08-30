@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { request } from './api';
 import LoginForm from './LoginForm';
 import { useAuth } from './useAuth';
@@ -17,7 +17,6 @@ function ChatLayout({ auth, logout, clearAuth }) {
   const [error, setError] = useState('');
   const [onlineUsers, setOnlineUsers] = useState(() => new Set());
   const [typingByConversation, setTypingByConversation] = useState({});
-  const messagesRef = useRef(null);
 
   const api = useCallback((path, options = {}) => request(path, { ...options, token, onUnauthorized: clearAuth }), [token, clearAuth]);
   useEffect(() => {
@@ -66,10 +65,6 @@ function ChatLayout({ auth, logout, clearAuth }) {
   const activeMessages = activeConversation ? messagesByConversation[activeConversation.id] || [] : [];
   const conversationItems = useMemo(() => conversations.map((conversation) => ({ conversation, contact: contactForConversation(conversation) })), [conversations, contacts, user.id]);
 
-  useEffect(() => {
-    messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight });
-  }, [activeConversation?.id, activeMessages.length]);
-
   const setTyping = (typing) => activeConversation && send({ type: 'TYPING', conversationId: activeConversation.id, typing });
 
   const sendMessage = (content) => {
@@ -88,7 +83,7 @@ function ChatLayout({ auth, logout, clearAuth }) {
     </aside>
     <section className="conversation">
       {error && <p className="error banner" role="alert">{error}</p>}
-      {activeConversation ? <><header className="conversation-header"><h1>{activeContact?.displayName || 'Conversation'}</h1><span className={onlineUsers.has(activeContact?.id) ? 'online' : 'offline'}>{onlineUsers.has(activeContact?.id) ? 'Online' : 'Offline'} · @{activeContact?.username}</span></header><div className="messages" ref={messagesRef}>{activeMessages.length ? activeMessages.map((message) => <article key={message.id} className={`message ${message.senderId === user.id ? 'mine' : ''}`}><p>{message.content}</p><time>{formatTime(message.createdAt)}</time></article>) : <p className="empty">No messages yet. Say hello.</p>}</div>{typingByConversation[activeConversation.id] === activeContact?.id && <p className="typing">{activeContact.displayName} is typing…</p>}<MessageComposer onSend={sendMessage} onTyping={setTyping} /></> : <div className="empty-state"><h1>Select a contact</h1><p>Choose a contact to open a direct conversation.</p></div>}
+      {activeConversation ? <><header className="conversation-header"><h1>{activeContact?.displayName || 'Conversation'}</h1><span className={onlineUsers.has(activeContact?.id) ? 'online' : 'offline'}>{onlineUsers.has(activeContact?.id) ? 'Online' : 'Offline'} · @{activeContact?.username}</span></header><div className="messages">{activeMessages.length ? activeMessages.map((message) => <article key={message.id} className={`message ${message.senderId === user.id ? 'mine' : ''}`}><p>{message.content}</p><time>{formatTime(message.createdAt)}</time></article>) : <p className="empty">No messages yet. Say hello.</p>}</div>{typingByConversation[activeConversation.id] === activeContact?.id && <p className="typing">{activeContact.displayName} is typing…</p>}<MessageComposer onSend={sendMessage} onTyping={setTyping} /></> : <div className="empty-state"><h1>Select a contact</h1><p>Choose a contact to open a direct conversation.</p></div>}
     </section>
   </main>;
 }
