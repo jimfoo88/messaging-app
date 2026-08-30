@@ -1,13 +1,13 @@
 # Messaging App
 
-A local Docker Compose application for one-to-one messaging. The current milestone implements the Spring Boot REST backend with MongoDB persistence and JWT authentication. The React UI and WebSocket delivery flow are not implemented yet.
+A local Docker Compose application for one-to-one messaging. The current milestone implements a Spring Boot REST and WebSocket backend with MongoDB persistence and JWT authentication. The React UI remains a placeholder.
 
 ## Services
 
 | Service | Purpose |
 | --- | --- |
 | `nginx` | Public reverse proxy on [http://localhost:8080](http://localhost:8080) |
-| `backend` | Java 21 / Spring Boot REST API |
+| `backend` | Java 21 / Spring Boot REST and WebSocket API |
 | `mongodb` | Persistent users, conversations, and messages |
 | `redis` | Reserved for presence, typing indicators, sessions, and WebSocket pub/sub |
 | `frontend` | Placeholder React service; UI implementation is pending |
@@ -23,8 +23,27 @@ MongoDB and Redis use named Docker volumes, so stored data survives container re
 - Conversation membership checks before a user may view or send messages
 - Message content validation (non-blank, maximum 2,000 characters)
 - Password hashes are never returned by the API
+- Authenticated WebSocket handshake and one-to-one real-time message delivery
 
-WebSocket authentication, real-time delivery, delivery/read updates, online presence, and typing indicators are intentionally pending.
+Delivery/read-state updates, online presence, typing indicators, Redis pub/sub, and multi-instance socket coordination are intentionally pending.
+
+## WebSocket messaging
+
+Connect to `ws://localhost:8080/ws?token=<JWT>` using the token returned by login. Browser WebSocket clients use the query token because they cannot attach an `Authorization` header during the handshake.
+
+Send a message:
+
+```json
+{"type":"SEND_MESSAGE","conversationId":"CONVERSATION_ID","content":"Hello Bob"}
+```
+
+The server validates the authenticated sender and conversation membership, persists the message to MongoDB, then sends this event to all connected sessions belonging to the two conversation participants:
+
+```json
+{"type":"MESSAGE_CREATED","message":{"id":"...","conversationId":"...","senderId":"...","content":"Hello Bob","status":"SENT"}}
+```
+
+Rejected commands receive a generic `ERROR` event.
 
 ## Run locally
 
@@ -106,4 +125,4 @@ docker run --rm \
   mvn test
 ```
 
-The current focused test verifies the deterministic direct-conversation key. The backend image also compiles the application during `docker compose up --build`.
+The focused tests verify deterministic direct-conversation creation and the `SEND_MESSAGE` → persistence → recipient `MESSAGE_CREATED` WebSocket flow. The backend image also compiles the application during `docker compose up --build`.
