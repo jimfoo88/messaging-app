@@ -1,6 +1,8 @@
 package com.messagingapp.controller;
 
+import com.messagingapp.config.AuditEvent;
 import com.messagingapp.config.CurrentUser;
+import com.messagingapp.config.JwtAuthenticator;
 import com.messagingapp.repository.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -10,6 +12,7 @@ import java.util.*;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +22,12 @@ public class AuthController {
   private final UserRepository users;
   private final PasswordEncoder passwords;
   private final SecretKey key;
+  private final JwtAuthenticator authenticator;
 
-  AuthController(UserRepository u, PasswordEncoder p, @Value("${app.jwt.secret}") String secret) {
+  AuthController(UserRepository u, PasswordEncoder p, JwtAuthenticator authenticator, @Value("${app.jwt.secret}") String secret) {
     users = u;
     passwords = p;
+    this.authenticator = authenticator;
     key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
   }
 
@@ -30,6 +35,7 @@ public class AuthController {
 
   record Result(String token, CurrentUser user) {}
 
+  @AuditEvent(AuditEvent.Type.LOGIN)
   @PostMapping("/login")
   ResponseEntity<Result> login(@RequestBody Login input) {
     var u =
@@ -50,5 +56,13 @@ public class AuthController {
             .signWith(key)
             .compact();
     return ResponseEntity.ok(new Result(token, principal));
+  }
+
+  @AuditEvent(AuditEvent.Type.LOGOUT)
+  @PostMapping("/logout")
+  ResponseEntity<Void> logout(
+      @AuthenticationPrincipal CurrentUser user, @RequestHeader("Authorization") String authorization) {
+    authenticator.revoke(authorization.substring(7));
+    return ResponseEntity.noContent().build();
   }
 }

@@ -124,6 +124,8 @@ The current milestone is a REST and WebSocket backend; the React UI remains a pl
 - `MessagingService` is the single authority for direct conversation creation, membership checks, and message persistence. Keep WebSocket and REST message creation routed through it.
 - Direct conversation keys sort the two user IDs before joining them. This prevents a pair of users from receiving duplicate direct conversations.
 - Do not serialize `User.passwordHash`; the model marks it with `@JsonIgnore`.
+- Spring AOP audit logging emits INFO events for successful login, logout, and WebSocket connect/disconnect; WARN is used for rejected logins, WebSocket commands, and unhandled controller/service exceptions. Never log passwords or JWTs.
+- `POST /api/auth/logout` is an authenticated audit endpoint only. JWTs are stateless and are not server-revoked; the client must discard its token.
 
 ### WebSocket contract
 

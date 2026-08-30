@@ -2,6 +2,8 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/messaging}
+    redis:
+      host: ${REDIS_HOST:localhost}
 app:
   jwt:
     secret: ${JWT_SECRET:development-only-secret-change-this-to-at-least-thirty-two-characters}

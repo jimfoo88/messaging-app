@@ -25,38 +25,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 class JwtFilter extends OncePerRequestFilter {
-  private final UserRepository users;
-  private final SecretKey key;
+  private final JwtAuthenticator authenticator;
 
-  JwtFilter(UserRepository users, @Value("${app.jwt.secret}") String secret) {
-    this.users = users;
-    key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+  JwtFilter(JwtAuthenticator authenticator) {
+    this.authenticator = authenticator;
   }
 
-  protected void doFilterInternal(HttpServletRequest q, HttpServletResponse r, FilterChain c)
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
       throws ServletException, IOException {
-    String h = q.getHeader("Authorization");
-    try {
-      if (h != null && h.startsWith("Bearer ")) {
-        var u =
-            users
-                .findById(
-                    Jwts.parser()
-                        .verifyWith(key)
-                        .build()
-                        .parseSignedClaims(h.substring(7))
-                        .getPayload()
-                        .getSubject())
-                .orElse(null);
-        if (u != null)
-          SecurityContextHolder.getContext()
-              .setAuthentication(
-                  new UsernamePasswordAuthenticationToken(
-                      new CurrentUser(u.id(), u.username(), u.displayName()), null, List.of()));
-      }
-    } catch (Exception ignored) {
+    String header = request.getHeader("Authorization");
+    if (header != null && header.startsWith("Bearer ")) {
+      authenticator.authenticate(header.substring(7)).ifPresent(user ->
+          SecurityContextHolder.getContext().setAuthentication(
+              new UsernamePasswordAuthenticationToken(user, null, List.of())));
     }
-    c.doFilter(q, r);
+    chain.doFilter(request, response);
   }
 }
 
@@ -72,7 +55,7 @@ public class SecurityConfig {
     return http.csrf(c -> c.disable())
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
-            a -> a.requestMatchers("/api/auth/**", "/ws").permitAll().anyRequest().authenticated())
+            a -> a.requestMatchers("/api/auth/login", "/ws").permitAll().anyRequest().authenticated())
         .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
         .build();
   }

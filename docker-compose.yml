@@ -9,6 +9,7 @@ services:
       context: ./backend
     environment:
       MONGODB_URI: mongodb://mongodb:27017/messaging
+      REDIS_HOST: redis
       JWT_SECRET: development-only-secret-change-this-to-at-least-thirty-two-characters
     depends_on:
       - mongodb
