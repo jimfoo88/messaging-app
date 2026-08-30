@@ -20,7 +20,7 @@ class MessagingWebSocketHandlerTest {
   void sendMessagePersistsAndDeliversCreatedEventToParticipants() throws Exception {
     MessagingService messages = mock(MessagingService.class);
     ConnectionRegistry connections = new ConnectionRegistry();
-    MessagingWebSocketHandler handler = new MessagingWebSocketHandler(new ObjectMapper().findAndRegisterModules(), messages, connections);
+    MessagingWebSocketHandler handler = new MessagingWebSocketHandler(new ObjectMapper().findAndRegisterModules(), messages, connections, mock(PresenceService.class), mock(TypingService.class));
     WebSocketSession alice = session("alice");
     WebSocketSession bob = session("bob");
     Message stored = new Message("message-1", "conversation-1", "alice", "Hello", Instant.now(), Message.Status.SENT);

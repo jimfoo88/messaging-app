@@ -29,7 +29,7 @@ MongoDB and Redis use named Docker volumes, so stored data survives container re
 - Password hashes are never returned by the API
 - Authenticated WebSocket handshake and one-to-one real-time message delivery
 
-Delivery/read-state updates, online presence, typing indicators, Redis pub/sub, and multi-instance socket coordination are intentionally pending.
+Delivery/read-state updates, Redis pub/sub for multi-instance socket coordination, and durable presence history are intentionally pending. Online presence and short-lived typing indicators are Redis-backed ephemeral state.
 
 ## WebSocket messaging
 

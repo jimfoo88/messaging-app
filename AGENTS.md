@@ -115,7 +115,7 @@ The current milestone is a REST and WebSocket backend; the React UI remains a pl
 - `nginx` exposes port `8080` and proxies `/api/` and `/ws/` to `backend`.
 - `backend` is Spring Boot on Java 21 and uses MongoDB for users, conversations, and messages.
 - `mongodb` is pinned to `mongo:8.2`; do not downgrade to `8.0`, which cannot start on this environment's Linux kernel.
-- `redis` is present but is intentionally unused until presence, typing, and cross-instance WebSocket delivery are added.
+- `redis` stores revoked-token fingerprints, ephemeral online presence, and five-second typing indicators. MongoDB remains the only persistent message store.
 
 ### API and data behavior
 
