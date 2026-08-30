@@ -19,12 +19,14 @@ public class AuditLoggingAspect {
   @Around("@annotation(event)")
   public Object audit(ProceedingJoinPoint joinPoint, AuditEvent event) throws Throwable {
     Object result = joinPoint.proceed();
+    String userId = userId(joinPoint.getArgs());
     if (event.value() == AuditEvent.Type.LOGIN && result instanceof ResponseEntity<?> response) {
-      if (response.getStatusCode().is2xxSuccessful()) log.info("User login succeeded");
+      String loginUserId = response.getBody() instanceof AuditIdentity identity ? identity.auditUser().id() : null;
+      if (response.getStatusCode().is2xxSuccessful()) log.info("User {} login succeeded", loginUserId == null ? "unknown" : loginUserId);
       else log.warn("User login rejected");
       return result;
     }
-    String userId = userId(joinPoint.getArgs());
+
     log.info("Audit event={} userId={}", event.value(), userId == null ? "unknown" : userId);
     return result;
   }

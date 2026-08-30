@@ -2,6 +2,10 @@
 
 A local Docker Compose application for one-to-one messaging. The current milestone implements a Spring Boot REST and WebSocket backend with MongoDB persistence and JWT authentication. The React UI remains a placeholder.
 
+## Frontend development
+
+The frontend implementation contract is in [FRONTEND_HANDOFF.md](FRONTEND_HANDOFF.md). It documents the exact REST and WebSocket payloads, auth/logout lifecycle, UI data flow, and Playwright acceptance checklist.
+
 ## Services
 
 | Service | Purpose |

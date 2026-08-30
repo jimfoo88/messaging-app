@@ -125,7 +125,7 @@ The current milestone is a REST and WebSocket backend; the React UI remains a pl
 - Direct conversation keys sort the two user IDs before joining them. This prevents a pair of users from receiving duplicate direct conversations.
 - Do not serialize `User.passwordHash`; the model marks it with `@JsonIgnore`.
 - Spring AOP audit logging emits INFO events for successful login, logout, and WebSocket connect/disconnect; WARN is used for rejected logins, WebSocket commands, and unhandled controller/service exceptions. Never log passwords or JWTs.
-- `POST /api/auth/logout` is an authenticated audit endpoint only. JWTs are stateless and are not server-revoked; the client must discard its token.
+- `POST /api/auth/logout` requires the current bearer token and revokes its Redis fingerprint until the JWT expires. Reuse is rejected by both REST and WebSocket authentication.
 
 ### WebSocket contract
 
@@ -134,6 +134,12 @@ The current milestone is a REST and WebSocket backend; the React UI remains a pl
 - On success the server persists the message then sends `{"type":"MESSAGE_CREATED","message":{...}}` to connected sessions belonging to both conversation participants.
 - Invalid authentication, malformed events, or authorization/persistence failures receive a generic `ERROR` event. Avoid exposing internal authorization details over the socket.
 - Delivery/read state, online presence, typing indicators, Redis pub/sub, and multi-instance socket coordination remain pending.
+
+### Frontend handoff
+
+- Read `FRONTEND_HANDOFF.md` before implementing the React app; it is the source of truth for API response shapes, socket events, auth state, and acceptance flow.
+- Keep HTTP paths relative (`/api/...`) because Nginx provides the same-origin backend proxy. Use `ws:`/`wss:` based on the browser protocol for `/ws?token=...`.
+- On logout or any 401/403, close the browser socket and clear the local token. Never keep a revoked token in UI state.
 
 ### Verification
 

@@ -1,6 +1,7 @@
 package com.messagingapp.controller;
 
 import com.messagingapp.config.AuditEvent;
+import com.messagingapp.config.AuditIdentity;
 import com.messagingapp.config.CurrentUser;
 import com.messagingapp.config.JwtAuthenticator;
 import com.messagingapp.repository.UserRepository;
@@ -33,7 +34,12 @@ public class AuthController {
 
   record Login(String username, String password) {}
 
-  record Result(String token, CurrentUser user) {}
+  record Result(String token, CurrentUser user) implements AuditIdentity {
+    @Override
+    public CurrentUser auditUser() {
+      return user;
+    }
+  }
 
   @AuditEvent(AuditEvent.Type.LOGIN)
   @PostMapping("/login")

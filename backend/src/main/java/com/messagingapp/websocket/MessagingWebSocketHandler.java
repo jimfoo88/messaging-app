@@ -32,6 +32,7 @@ public class MessagingWebSocketHandler extends TextWebSocketHandler {
       if (!"SEND_MESSAGE".equals(command.type())) throw new IllegalArgumentException("Unsupported event type");
       Message message = messages.send(user(session).id(), command.conversationId(), command.content());
       String event = mapper.writeValueAsString(new MessageCreated("MESSAGE_CREATED", message));
+      // Send to both sides: the sender receives the server-assigned id/timestamp used to replace any pending UI state.
       for (String participant : messages.participants(user(session).id(), command.conversationId())) connections.send(participant, event);
     } catch (Exception exception) {
       log.warn("WebSocket message rejected for userId={}", user(session).id(), exception);

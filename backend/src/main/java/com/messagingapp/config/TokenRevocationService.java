@@ -15,6 +15,7 @@ public class TokenRevocationService {
     this.redis = redis;
   }
 
+  // Store only a fingerprint and let Redis expire it with the JWT, so revocation never persists longer than the token.
   public void revoke(String token, Duration remainingLifetime) {
     if (!remainingLifetime.isNegative() && !remainingLifetime.isZero()) {
       redis.opsForValue().set(KEY_PREFIX + fingerprint(token), "1", remainingLifetime);
