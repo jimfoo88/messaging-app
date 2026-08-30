@@ -3,6 +3,8 @@ package com.messagingapp.websocket;
 import com.messagingapp.config.JwtAuthenticator;
 import com.messagingapp.config.CurrentUser;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -29,6 +31,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
   }
 
   private static class JwtHandshakeInterceptor implements HandshakeInterceptor {
+    private static final Logger log = LoggerFactory.getLogger(JwtHandshakeInterceptor.class);
     private final JwtAuthenticator authenticator;
 
     JwtHandshakeInterceptor(JwtAuthenticator authenticator) { this.authenticator = authenticator; }
@@ -37,9 +40,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler handler, Map<String, Object> attributes) {
       String token = request.getURI().getQuery() == null ? null : java.util.Arrays.stream(request.getURI().getQuery().split("&"))
           .filter(value -> value.startsWith("token=")).map(value -> value.substring(6)).findFirst().orElse(null);
-      if (token == null) return false;
+      if (token == null) {
+        log.warn("WebSocket handshake rejected: token query parameter is missing");
+        return false;
+      }
       return authenticator.authenticate(java.net.URLDecoder.decode(token, java.nio.charset.StandardCharsets.UTF_8))
-          .map(user -> { attributes.put("user", user); return true; }).orElse(false);
+          .map(user -> { attributes.put("user", user); return true; })
+          .orElseGet(() -> { log.warn("WebSocket handshake rejected: token is invalid, expired, or revoked"); return false; });
     }
 
     @Override public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler handler, Exception exception) {}
