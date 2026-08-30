@@ -34,8 +34,12 @@ public class MessagingService {
         .orElseGet(() -> conversations.save(new Conversation(null, key, ids, Instant.now())));
   }
 
-  public List<Conversation> all(String me) {
-    return conversations.findAll().stream().filter(c -> c.participantIds().contains(me)).toList();
+  public List<ConversationSummary> all(String me) {
+    return conversations.findAll().stream()
+        .filter(c -> c.participantIds().contains(me))
+        .map(c -> new ConversationSummary(c.id(), c.participantKey(), c.participantIds(), c.createdAt(), messages.findTopByConversationIdOrderByCreatedAtDesc(c.id())))
+        .sorted(java.util.Comparator.comparing((ConversationSummary summary) -> summary.lastMessage() == null ? summary.createdAt() : summary.lastMessage().createdAt()).reversed())
+        .toList();
   }
 
   public List<Message> messages(String me, String id) {

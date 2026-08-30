@@ -38,7 +38,7 @@ All paths below are relative to the browser origin. All endpoints except login r
 | `POST /api/auth/login` | `{"username":"alice","password":"alice123"}` | `{"token":"...","user":{"id":"...","username":"alice","displayName":"Alice Adams"}}` |
 | `POST /api/auth/logout` | none | `204 No Content` |
 | `GET /api/users` | none | Contact array; the current user is excluded |
-| `GET /api/conversations` | none | Conversation array for the current user |
+| `GET /api/conversations` | none | Conversation summaries for the current user, newest activity first, with `lastMessage` when one exists |
 | `POST /api/conversations/direct` | `{"participantId":"CONTACT_ID"}` | Existing or newly-created direct conversation |
 | `GET /api/conversations/{conversationId}/messages` | none | Message array, oldest first |
 | `POST /api/conversations/{conversationId}/messages` | `{"content":"Hello"}` | Persisted message |
@@ -57,6 +57,7 @@ type Conversation = {
   participantKey: string;
   participantIds: string[]; // exactly two IDs for this MVP
   createdAt: string;         // ISO timestamp
+  lastMessage: Message | null; // Present in GET /api/conversations summaries
 };
 
 type Message = {

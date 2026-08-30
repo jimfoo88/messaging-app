@@ -26,7 +26,7 @@ public class MessagingController {
   }
 
   @GetMapping("/conversations")
-  List<Conversation> conversations(@AuthenticationPrincipal CurrentUser user) {
+  List<ConversationSummary> conversations(@AuthenticationPrincipal CurrentUser user) {
     return service.all(user.id());
   }
 

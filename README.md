@@ -88,7 +88,7 @@ All endpoints except login require a bearer token.
 | `POST` | `/api/auth/login` | Exchange username and password for a JWT |
 | `POST` | `/api/auth/logout` | Revoke the current JWT in Redis |
 | `GET` | `/api/users` | List contacts excluding the authenticated user |
-| `GET` | `/api/conversations` | List the authenticated user's conversations |
+| `GET` | `/api/conversations` | List conversation summaries with each latest message |
 | `POST` | `/api/conversations/direct` | Find or create a direct conversation |
 | `GET` | `/api/conversations/{id}/messages` | List messages in a conversation |
 | `POST` | `/api/conversations/{id}/messages` | Persist a new message in a conversation |

@@ -41,6 +41,7 @@ function ChatLayout({ auth, logout, clearAuth }) {
     if (event.type === 'MESSAGE_CREATED') {
       const message = event.message;
       setMessagesByConversation((cache) => ({ ...cache, [message.conversationId]: addMessage(cache[message.conversationId] || [], message) }));
+      setConversations((current) => current.map((conversation) => conversation.id === message.conversationId ? { ...conversation, lastMessage: message } : conversation));
     } else if (event.type === 'PRESENCE_SNAPSHOT') setOnlineUsers(new Set(event.userIds));
     else if (event.type === 'PRESENCE_UPDATED') setOnlineUsers((current) => { const next = new Set(current); event.online ? next.add(event.userId) : next.delete(event.userId); return next; });
     else if (event.type === 'TYPING_UPDATED') {
@@ -78,7 +79,7 @@ function ChatLayout({ auth, logout, clearAuth }) {
     <aside className="sidebar">
       <header className="sidebar-header"><div><strong>{user.displayName}</strong><span className={connected ? 'online' : 'offline'}>{connected ? 'Connected' : 'Reconnecting…'}</span></div><button className="secondary" onClick={logout}>Log out</button></header>
       <section><h2>Contacts</h2>{loading ? <p>Loading…</p> : contacts.map((contact) => <button className="list-item" key={contact.id} onClick={() => selectContact(contact)}><strong>{contact.displayName}</strong><span className={onlineUsers.has(contact.id) ? 'online' : 'offline'}>{onlineUsers.has(contact.id) ? 'Online' : 'Offline'} · @{contact.username}</span></button>)}</section>
-      <section><h2>Conversations</h2>{conversationItems.map(({ conversation, contact }) => <button className={`list-item ${activeConversation?.id === conversation.id ? 'selected' : ''}`} key={conversation.id} onClick={() => setActiveConversation(conversation)}><strong>{contact?.displayName || 'Conversation'}</strong><span>{messagesByConversation[conversation.id]?.at(-1)?.content || 'No messages yet'}</span></button>)}</section>
+      <section><h2>Conversations</h2>{conversationItems.map(({ conversation, contact }) => <button className={`list-item ${activeConversation?.id === conversation.id ? 'selected' : ''}`} key={conversation.id} onClick={() => setActiveConversation(conversation)}><strong>{contact?.displayName || 'Conversation'}</strong><span>{messagesByConversation[conversation.id]?.at(-1)?.content || conversation.lastMessage?.content || 'No messages yet'}</span></button>)}</section>
     </aside>
     <section className="conversation">
       {error && <p className="error banner" role="alert">{error}</p>}
