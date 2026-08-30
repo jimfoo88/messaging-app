@@ -2,11 +2,12 @@
 # Spring Boot & Build Tool Artifacts
 # =========================================================================
 # Maven build directory
-target/
+backend/target/
 *.pom
 *.war
 *.ear
 *.rar
+*.lst
 
 # Gradle build directories
 .gradle/
