@@ -3,6 +3,7 @@ import { request } from './api';
 
 const STORAGE_KEY = 'messaging-app-auth';
 function storedAuth() {
+  //store in session cookie for future update
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; }
   catch { localStorage.removeItem(STORAGE_KEY); return null; }
 }

@@ -1,10 +1,96 @@
 package com.messagingapp.websocket;
-import com.fasterxml.jackson.databind.ObjectMapper; import com.messagingapp.config.*; import com.messagingapp.model.Message; import com.messagingapp.service.MessagingService; import java.io.IOException; import java.util.Set; import org.slf4j.*; import org.springframework.stereotype.Component; import org.springframework.web.socket.*; import org.springframework.web.socket.handler.TextWebSocketHandler;
-@Component public class MessagingWebSocketHandler extends TextWebSocketHandler {
-  private static final Logger log=LoggerFactory.getLogger(MessagingWebSocketHandler.class); private final ObjectMapper mapper; private final MessagingService messages; private final ConnectionRegistry connections; private final PresenceService presence; private final TypingService typing;
-  public MessagingWebSocketHandler(ObjectMapper mapper, MessagingService messages, ConnectionRegistry connections, PresenceService presence, TypingService typing) { this.mapper=mapper;this.messages=messages;this.connections=connections;this.presence=presence;this.typing=typing; }
-  @AuditEvent(AuditEvent.Type.WEBSOCKET_CONNECTED) @Override public void afterConnectionEstablished(WebSocketSession session) throws IOException { String userId=user(session).id(); connections.add(userId,session); session.sendMessage(new TextMessage(mapper.writeValueAsString(new PresenceSnapshot("PRESENCE_SNAPSHOT", presence.onlineUsers())))); if(presence.connect(userId,session.getId())) connections.broadcast(mapper.writeValueAsString(new PresenceUpdated("PRESENCE_UPDATED",userId,true))); }
-  @AuditEvent(AuditEvent.Type.WEBSOCKET_DISCONNECTED) @Override public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws IOException { String userId=user(session).id(); connections.remove(userId,session); if(presence.disconnect(userId,session.getId())) connections.broadcast(mapper.writeValueAsString(new PresenceUpdated("PRESENCE_UPDATED",userId,false))); }
-  @Override protected void handleTextMessage(WebSocketSession session, TextMessage payload) throws IOException { try { Command command=mapper.readValue(payload.getPayload(),Command.class); String userId=user(session).id(); if("SEND_MESSAGE".equals(command.type())) { Message message=messages.send(userId,command.conversationId(),command.content()); String event=mapper.writeValueAsString(new MessageCreated("MESSAGE_CREATED",message)); for(String participant:messages.participants(userId,command.conversationId())) connections.send(participant,event); } else if("TYPING".equals(command.type())) { typing.update(command.conversationId(),userId,Boolean.TRUE.equals(command.typing())); String event=mapper.writeValueAsString(new TypingUpdated("TYPING_UPDATED",command.conversationId(),userId,Boolean.TRUE.equals(command.typing()))); for(String participant:messages.participants(userId,command.conversationId())) connections.send(participant,event); } else throw new IllegalArgumentException("Unsupported event type"); } catch(Exception exception) { log.warn("WebSocket event rejected for userId={}",user(session).id(),exception); session.sendMessage(new TextMessage(mapper.writeValueAsString(new ErrorEvent("ERROR","Message was not accepted")))); } }
-  private CurrentUser user(WebSocketSession session){return (CurrentUser)session.getAttributes().get("user");} public record Command(String type,String conversationId,String content,Boolean typing){} public record MessageCreated(String type,Message message){} public record PresenceSnapshot(String type,Set<String> userIds){} public record PresenceUpdated(String type,String userId,boolean online){} public record TypingUpdated(String type,String conversationId,String userId,boolean typing){} public record ErrorEvent(String type,String message){}
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.messagingapp.config.*;
+import com.messagingapp.model.Message;
+import com.messagingapp.service.MessagingService;
+
+import java.io.IOException;
+import java.util.Set;
+
+import org.slf4j.*;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.*;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+@Component
+public class MessagingWebSocketHandler extends TextWebSocketHandler {
+    private static final Logger log = LoggerFactory.getLogger(MessagingWebSocketHandler.class);
+    private final ObjectMapper mapper;
+    private final MessagingService messages;
+    private final ConnectionRegistry connections;
+    private final PresenceService presence;
+    private final TypingService typing;
+
+    public MessagingWebSocketHandler(ObjectMapper mapper, MessagingService messages, ConnectionRegistry connections, PresenceService presence, TypingService typing) {
+        this.mapper = mapper;
+        this.messages = messages;
+        this.connections = connections;
+        this.presence = presence;
+        this.typing = typing;
+    }
+
+    @AuditEvent(AuditEvent.Type.WEBSOCKET_CONNECTED)
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) throws IOException {
+        String userId = user(session).id();
+        connections.add(userId, session);
+        session.sendMessage(new TextMessage(mapper.writeValueAsString(new PresenceSnapshot("PRESENCE_SNAPSHOT", presence.onlineUsers()))));
+        if (presence.connect(userId, session.getId()))
+            connections.broadcast(mapper.writeValueAsString(new PresenceUpdated("PRESENCE_UPDATED", userId, true)));
+    }
+
+    @AuditEvent(AuditEvent.Type.WEBSOCKET_DISCONNECTED)
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws IOException {
+        String userId = user(session).id();
+        connections.remove(userId, session);
+        if (presence.disconnect(userId, session.getId()))
+            connections.broadcast(mapper.writeValueAsString(new PresenceUpdated("PRESENCE_UPDATED", userId, false)));
+    }
+
+    @Override
+    protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage payload) throws IOException {
+        try {
+            Command command = mapper.readValue(payload.getPayload(), Command.class);
+            String userId = user(session).id();
+            if ("SEND_MESSAGE".equals(command.type())) {
+                Message message = messages.send(userId, command.conversationId(), command.content());
+                String event = mapper.writeValueAsString(new MessageCreated("MESSAGE_CREATED", message));
+                for (String participant : messages.participants(userId, command.conversationId()))
+                    connections.send(participant, event);
+            } else if ("TYPING".equals(command.type())) {
+                typing.update(command.conversationId(), userId, Boolean.TRUE.equals(command.typing()));
+                String event = mapper.writeValueAsString(new TypingUpdated("TYPING_UPDATED", command.conversationId(), userId, Boolean.TRUE.equals(command.typing())));
+                for (String participant : messages.participants(userId, command.conversationId()))
+                    connections.send(participant, event);
+            } else throw new IllegalArgumentException("Unsupported event type");
+        } catch (Exception exception) {
+            log.warn("WebSocket event rejected for userId={}", user(session).id(), exception);
+            session.sendMessage(new TextMessage(mapper.writeValueAsString(new ErrorEvent("ERROR", "Message was not accepted"))));
+        }
+    }
+
+    private CurrentUser user(WebSocketSession session) {
+        return (CurrentUser) session.getAttributes().get("user");
+    }
+
+    public record Command(String type, String conversationId, String content, Boolean typing) {
+    }
+
+    public record MessageCreated(String type, Message message) {
+    }
+
+    public record PresenceSnapshot(String type, Set<String> userIds) {
+    }
+
+    public record PresenceUpdated(String type, String userId, boolean online) {
+    }
+
+    public record TypingUpdated(String type, String conversationId, String userId, boolean typing) {
+    }
+
+    public record ErrorEvent(String type, String message) {
+    }
 }
